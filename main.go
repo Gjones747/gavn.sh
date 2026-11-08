@@ -1,21 +1,21 @@
 package main
 
 import (
-	_ "embed"
+	"embed"
 	"log"
 	"net/http"
 	"os"
 )
 
-//go:embed static/index.html
-var indexHTML []byte
+//go:embed static
+var static embed.FS
 
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write(indexHTML)
+		http.ServeFileFS(w, r, static, "static/index.html")
 	})
+	mux.Handle("GET /static/", http.FileServerFS(static))
 
 	port := os.Getenv("PORT")
 	if port == "" {
