@@ -21,8 +21,8 @@
     #menu {
       list-style: none; margin: 0; padding: 0;
       width: min(260px, 60vw);
-      opacity: 0; pointer-events: none;
     }
+    #menu li { opacity: 0; pointer-events: none; }
     #menu li + li { border-top: 1px solid #3a3a3a; }
     #menu li > * {
       display: flex; justify-content: space-between; align-items: center;
@@ -45,10 +45,12 @@
     <li><a href="https://jeopardy.gavn.sh">jeopardy.gavn.sh</a></li>
   </ul>
   <script>
-    // Each pixel of pointer movement over the cat reveals the menu a little more.
-    const RUB_DISTANCE = 4000; // px of rubbing for a full reveal
+    // Pointer movement over the cat reveals the menu rows one at a time:
+    // each row gets an equal slice of the rub distance and fades in during it.
+    const RUB_DISTANCE = 6000; // px of rubbing for a full reveal
     const cat = document.getElementById("cat");
     const menu = document.getElementById("menu");
+    const items = [...menu.children];
     let rubbed = 0;
     let last = null;
 
@@ -57,12 +59,13 @@
       if (last) rubbed += Math.hypot(e.clientX - last.x, e.clientY - last.y);
       last = { x: e.clientX, y: e.clientY };
 
-      const p = Math.min(rubbed / RUB_DISTANCE, 1);
-      menu.style.opacity = p;
-      if (p > 0.2) {
-        menu.style.pointerEvents = "auto";
-        menu.removeAttribute("aria-hidden");
-      }
+      const p = Math.min(rubbed / RUB_DISTANCE, 1) * items.length;
+      items.forEach((li, i) => {
+        const o = Math.min(Math.max(p - i, 0), 1);
+        li.style.opacity = o;
+        if (o > 0.2) li.style.pointerEvents = "auto";
+      });
+      if (p > 0.2) menu.removeAttribute("aria-hidden");
     });
     cat.addEventListener("pointerleave", () => { last = null; });
     cat.addEventListener("pointerup", () => { last = null; });
