@@ -6,12 +6,66 @@
   <title>gavn.sh</title>
   <style>
     html, body { margin: 0; height: 100%; background: #000; }
-    body { display: flex; align-items: center; justify-content: center; }
-    img { width: min(260px, 60vw); height: auto; border-radius: 8px; animation: fade-in 10s linear both; }
+    body {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
+      color: #ddd; -webkit-font-smoothing: antialiased;
+    }
+    #cat {
+      width: min(260px, 60vw); height: auto; border-radius: 8px;
+      animation: fade-in 10s linear both;
+      touch-action: none; user-select: none; -webkit-user-drag: none; cursor: grab;
+    }
     @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    /* Simple list: hairline dividers, text left, arrow right on links. */
+    #menu {
+      list-style: none; margin: 0; padding: 0;
+      width: min(260px, 60vw);
+      opacity: 0; pointer-events: none;
+    }
+    #menu li + li { border-top: 1px solid #3a3a3a; }
+    #menu li > * {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 13px 4px; font-size: 16px; letter-spacing: -0.01em;
+      color: #ddd; text-decoration: none;
+      transition: color .15s;
+    }
+    #menu li > span { color: #8a8a8a; }
+    #menu a::after { content: "↗"; color: #8a8a8a; transition: color .15s, transform .15s; }
+    #menu a:hover { color: #fff; }
+    #menu a:hover::after { color: #fff; transform: translate(2px, -2px); }
+    #menu a:focus-visible { outline: 1px solid #ddd; outline-offset: -1px; border-radius: 8px; }
   </style>
 </head>
 <body>
-  <img src="/static/cat.png" alt="cat">
+  <img id="cat" src="/static/cat.png" alt="cat" draggable="false">
+  <ul id="menu" aria-hidden="true">
+    <li><span>...</span></li>
+    <li><span>...</span></li>
+    <li><a href="https://jeopardy.gavn.sh">jeopardy.gavn.sh</a></li>
+  </ul>
+  <script>
+    // Each pixel of pointer movement over the cat reveals the menu a little more.
+    const RUB_DISTANCE = 4000; // px of rubbing for a full reveal
+    const cat = document.getElementById("cat");
+    const menu = document.getElementById("menu");
+    let rubbed = 0;
+    let last = null;
+
+    cat.addEventListener("pointermove", (e) => {
+      if (rubbed >= RUB_DISTANCE) return;
+      if (last) rubbed += Math.hypot(e.clientX - last.x, e.clientY - last.y);
+      last = { x: e.clientX, y: e.clientY };
+
+      const p = Math.min(rubbed / RUB_DISTANCE, 1);
+      menu.style.opacity = p;
+      if (p > 0.2) {
+        menu.style.pointerEvents = "auto";
+        menu.removeAttribute("aria-hidden");
+      }
+    });
+    cat.addEventListener("pointerleave", () => { last = null; });
+    cat.addEventListener("pointerup", () => { last = null; });
+  </script>
 </body>
 </html>
